@@ -1,0 +1,14 @@
+kaggle
+numpy
+matplotlib
+pandas
+scikit-learn
+python-box
+pytorch-lightning
+opencv-python
+# git+https://github.com/albumentations-team/albumentations
+tqdm
+python-dotenv
+wandb
+tensorboard
+jupyterlab
