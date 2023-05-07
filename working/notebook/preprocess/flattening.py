@@ -33,8 +33,8 @@ def split_label_mask_train(input_dir, save_dir, split):
         cv2.imwrite(save_dir + f"inklabels_{fragment_i}_{split_i}.png", label)
 
 
-def split_label_mask_inference(input_dir, save_dir, fragment_i, split, split_i, train=True):
-    shutil.copy(input_dir + f"{fragment_i}/mask.png", save_dir + f"mask_{fragment_i}.png")
+def split_label_mask_inference(input_dir, save_dir, fragment_i):
+    shutil.copy(f"{input_dir}/mask.png", save_dir + f"mask_{fragment_i}.png")
 
 
 def split_stack_image(input_dir, save_dir, split=1):
@@ -88,8 +88,8 @@ def flatten(image_stack, x, y, range, z_buffer):
     flatten_stack = clipped_stack[(is_idx[0] + topographic_map-z_buffer) % clipped_stack.shape[0], is_idx[1], is_idx[2]]
     flatten_stack=(np.flip(flatten_stack,axis=0)*255).astype("uint8")
 
-    return clipped_stack, gauss_stack, filtered_stack, topographic_map, flatten_stack
-    # return flatten_stack
+    # return clipped_stack, gauss_stack, filtered_stack, topographic_map, flatten_stack
+    return flatten_stack
 
 
 def whole_flatten(dataset_dir, image_stack_dir, fragment_i, split_i, delete=False):
@@ -161,3 +161,48 @@ def concat_npy(save_dir, start, stop, fragment_i, delete=False):
     output_stack_fname = f"{fragment_i}.npy"
     with open(f"{save_dir}/{start}-{stop}/{output_stack_fname}", 'wb') as f:
         np.save(f, result, allow_pickle=True)
+
+
+def dataset_preprocess_nonflatten(input_dir, dataset_dir, split, start, stop, train=True, delete=True):
+    image_stack_dir = f"{dataset_dir}/nonflaten/"
+    extract_save_dir = f"{image_stack_dir}/{start}-{stop}/"
+    os.makedirs(dataset_dir, exist_ok=True)
+    os.makedirs(image_stack_dir, exist_ok=True)
+    os.makedirs(extract_save_dir, exist_ok=True)
+
+    fragment_i = input_dir.split("/")[-1]
+    print(input_dir)
+    if train:
+        split_label_mask_train(input_dir, dataset_dir, split)
+    else:
+        split_label_mask_inference(input_dir, dataset_dir, fragment_i)
+
+    split_stack_image(input_dir, dataset_dir, split)
+
+    for split_i in range(split):
+        extract_nonflatten_layers(dataset_dir, extract_save_dir, fragment_i, split_i, start, stop, delete)
+
+
+
+def dataset_preprocess_flatten(input_dir, dataset_dir, split, start, stop, train=True, delete=True):
+    image_stack_dir = f"{dataset_dir}/flatten/"
+    extract_save_dir = f"{image_stack_dir}/{start}-{stop}/"
+    os.makedirs(dataset_dir, exist_ok=True)
+    os.makedirs(image_stack_dir, exist_ok=True)
+    os.makedirs(extract_save_dir, exist_ok=True)
+
+    fragment_i = input_dir.split("/")[-1]
+    print(input_dir)
+    if train:
+        split_label_mask_train(input_dir, dataset_dir, split)
+    else:
+        split_label_mask_inference(input_dir, dataset_dir, fragment_i)
+
+    split_stack_image(input_dir, dataset_dir, split)
+
+    for split_i in range(split):
+        whole_flatten(dataset_dir, image_stack_dir, fragment_i, split_i, delete=False)
+        extract_flatten_layers(image_stack_dir, extract_save_dir, fragment_i, split_i, start, stop, delete)
+
+    if not train:
+        concat_npy(extract_save_dir, start, stop, fragment_i, delete)
