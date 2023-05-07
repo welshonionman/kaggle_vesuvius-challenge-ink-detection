@@ -164,7 +164,7 @@ def concat_npy(save_dir, start, stop, fragment_i, delete=False):
 
 
 def dataset_preprocess_nonflatten(input_dir, dataset_dir, split, start, stop, train=True, delete=True):
-    image_stack_dir = f"{dataset_dir}/nonflaten/"
+    image_stack_dir = f"{dataset_dir}/nonflatten/"
     extract_save_dir = f"{image_stack_dir}/{start}-{stop}/"
     os.makedirs(dataset_dir, exist_ok=True)
     os.makedirs(image_stack_dir, exist_ok=True)
@@ -181,6 +181,9 @@ def dataset_preprocess_nonflatten(input_dir, dataset_dir, split, start, stop, tr
 
     for split_i in range(split):
         extract_nonflatten_layers(dataset_dir, extract_save_dir, fragment_i, split_i, start, stop, delete)
+
+    if not train:
+        concat_npy(extract_save_dir, start, stop, fragment_i, delete)
 
 
 
