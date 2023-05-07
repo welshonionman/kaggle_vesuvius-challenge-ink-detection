@@ -14,35 +14,39 @@ from os import path
 GAUSSIAN_BLUR_TOPOGRAPHIC_MAP = False
 
 
-def split_label_mask(input_dir, save_dir, fragment_i, split, split_i, train=True):
+def split_label_mask_train(input_dir, save_dir, split):
     # 1~64のsurface_volumeをstackし、npy（float32）で保存
     # fragmentサイズが大きい場合はsplit分割
-    if train:
-        mask=cv2.imread(input_dir + f"{fragment_i}/mask.png", 0)
-        label=cv2.imread(input_dir + f"{fragment_i}/inklabels.png", 0)
+    fragment_i = input_dir.split("/")[-1]
+    for split_i in range(split):
+        mask=cv2.imread(f"{input_dir}/mask.png", 0)
+        label=cv2.imread(f"{input_dir}/inklabels.png", 0)
         image_height = mask.shape[0]
         split_height = image_height // split
-        if split_i < split - 1:
-            mask = mask[split_i*split_height:(split_i+1)*split_height, :]
-            label = label[split_i*split_height:(split_i+1)*split_height, :]
-        else:
+        if split_i == split - 1:
             mask = mask[split_i*split_height:image_height, :]
             label = label[split_i*split_height:image_height, :]
+        else:
+            mask = mask[split_i*split_height:(split_i+1)*split_height, :]
+            label = label[split_i*split_height:(split_i+1)*split_height, :]
         cv2.imwrite(save_dir + f"mask_{fragment_i}_{split_i}.png", mask)
         cv2.imwrite(save_dir + f"inklabels_{fragment_i}_{split_i}.png", label)
-    else:
-        shutil.copy(input_dir + f"{fragment_i}/mask.png", save_dir + f"mask_{fragment_i}.png")
 
 
-def stack_image(input_dir, save_dir, fragment_i, split=1):
-    image_height = cv2.imread(input_dir + f"{fragment_i}/mask.png", -1).shape[0]
+def split_label_mask_inference(input_dir, save_dir, fragment_i, split, split_i, train=True):
+    shutil.copy(input_dir + f"{fragment_i}/mask.png", save_dir + f"mask_{fragment_i}.png")
+
+
+def split_stack_image(input_dir, save_dir, split=1):
+    fragment_i = input_dir.split("/")[-1]
+    image_height = cv2.imread(f"{input_dir}/mask.png", -1).shape[0]
     split_height = image_height // split
 
     for split_i in range(split):
         image_stack = None
         images = []
 
-        surfaces_path = sorted(glob(input_dir + f"{fragment_i}/surface_volume/*.tif"))
+        surfaces_path = sorted(glob(f"{input_dir}/surface_volume/*.tif"))
         save_npy_path = save_dir + f"image_stack_{fragment_i}_{split_i}.npy"
         if os.path.exists(save_npy_path):
             continue
@@ -83,25 +87,28 @@ def flatten(image_stack, x, y, range, z_buffer):
     is_idx = np.indices(clipped_stack.shape)
     flatten_stack = clipped_stack[(is_idx[0] + topographic_map-z_buffer) % clipped_stack.shape[0], is_idx[1], is_idx[2]]
     flatten_stack=(np.flip(flatten_stack,axis=0)*255).astype("uint8")
+
     return clipped_stack, gauss_stack, filtered_stack, topographic_map, flatten_stack
+    # return flatten_stack
 
 
-def whole_image_stack_flatten(image_stack_dir, save_dir, fragment_i, split_i, delete=False):
-    save_path = os.path.join(save_dir + f"flatten_stack_{fragment_i}_{split_i}.npy")
+def whole_flatten(dataset_dir, image_stack_dir, fragment_i, split_i, delete=False):
+    save_path = os.path.join(image_stack_dir + f"flatten_stack_{fragment_i}_{split_i}.npy")
+    image_stack_path = dataset_dir + f"image_stack_{fragment_i}_{split_i}.npy"
+
     if os.path.exists(save_path):
         return
 
-    image_stack_path = image_stack_dir + f"image_stack_{fragment_i}_{split_i}.npy"
-    with open(os.path.join(image_stack_path), 'rb') as f:
-        image_stack = np.load(f)
+    image_stack = np.load(open(image_stack_path, 'rb'))
 
     _, image_stack_x, image_stack_y = image_stack.shape
     flatten_array = np.zeros_like(image_stack)
+
     for x in range(0, image_stack_x, 500):
         for y in range(0, image_stack_y, 500):
-            clipped_stack, gauss_stack, filtered_stack, topographic_map, flattened_stack = flatten(image_stack, x, y, 500, 5)
+            flattened_stack = flatten(image_stack, x, y, 500, 5)
             flatten_array[:, x:x+500, y:y+500] = flattened_stack
-            del clipped_stack, gauss_stack, filtered_stack, topographic_map, flattened_stack
+            del flattened_stack
     with open(save_path, 'wb') as f:
         np.save(f, flatten_array, allow_pickle=True)
 
@@ -112,24 +119,35 @@ def whole_image_stack_flatten(image_stack_dir, save_dir, fragment_i, split_i, de
         os.remove(os.path.join(image_stack_path))
 
 
-def extract_layers(input_dir, save_dir, input_prefix, fragment_i, split_i, start, stop, prefix, delete=False):
-    # flatten_stackの特定層のみを保存
-    flatten_stack_fname = f"{fragment_i}_{split_i}.npy"
-    input_flatten_stack_path = f"{input_dir}/{input_prefix}_{fragment_i}_{split_i}.npy"
-    os.makedirs(f"{save_dir}/{start}-{stop}", exist_ok=True)
+def extract_flatten_layers(input_dir, save_dir, fragment_i, split_i, start, stop, delete=False):
+    input_stack_path = f"{input_dir}/flatten_stack_{fragment_i}_{split_i}.npy"
+    output_stack_path=f"{save_dir}/{fragment_i}_{split_i}.npy"
 
-    stack = np.load(open(input_flatten_stack_path, 'rb'))
-    if prefix=="flatten":
-        stack = stack[-stop-1:-start, :, :]
-    if prefix=="non_flatten":
-        stack = stack[start:stop+1, :, :]
-    with open(f"{save_dir}/{start}-{stop}/{flatten_stack_fname}", 'wb') as f:
+    stack = np.load(open(input_stack_path, 'rb'))
+    stack = stack[-stop-1:-start, :, :]
+
+    with open(output_stack_path, 'wb') as f:
         np.save(f, stack, allow_pickle=True)
     del stack
     gc.collect()
 
     if delete:
-        os.remove(os.path.join(input_flatten_stack_path))
+        os.remove(os.path.join(input_stack_path))
+
+def extract_nonflatten_layers(input_dir, save_dir, fragment_i, split_i, start, stop, delete=False):
+    input_stack_path = f"{input_dir}/image_stack_{fragment_i}_{split_i}.npy"
+    output_stack_path=f"{save_dir}/{fragment_i}_{split_i}.npy"
+
+    stack = np.load(open(input_stack_path, 'rb'))
+    stack = stack[start:stop+1, :, :]
+
+    with open(output_stack_path, 'wb') as f:
+        np.save(f, stack, allow_pickle=True)
+    del stack
+    gc.collect()
+
+    if delete:
+        os.remove(os.path.join(input_stack_path))
 
 
 def concat_npy(save_dir, start, stop, fragment_i, delete=False):
@@ -140,6 +158,6 @@ def concat_npy(save_dir, start, stop, fragment_i, delete=False):
         if delete:
             os.remove(npy)
     result = np.concatenate(npy_list, axis=1)
-    flatten_stack_fname = f"{fragment_i}.npy"
-    with open(f"{save_dir}/{start}-{stop}/{flatten_stack_fname}", 'wb') as f:
+    output_stack_fname = f"{fragment_i}.npy"
+    with open(f"{save_dir}/{start}-{stop}/{output_stack_fname}", 'wb') as f:
         np.save(f, result, allow_pickle=True)
