@@ -92,7 +92,7 @@ def flatten(image_stack, x, y, range, z_buffer):
         topographic_map = cv2.medianBlur(topographic_map, 15)
 
     is_idx = np.indices(clipped_stack.shape)
-    flattened_stack = clipped_stack[is_idx[0] + topographic_map - z_buffer) % clipped_stack.shape[0], is_idx[1], is_idx[2],]
+    flattened_stack = clipped_stack[(is_idx[0] + topographic_map - z_buffer) % clipped_stack.shape[0], is_idx[1], is_idx[2],]
     flattened_stack=(np.flip(flattened_stack, axis=0) * 65536).astype("uint16")
 
     return clipped_stack, gauss_stack, filtered_stack, topographic_map, flattened_stack
