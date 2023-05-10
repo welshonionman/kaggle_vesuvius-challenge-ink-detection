@@ -6,7 +6,8 @@ scikit-learn
 python-box
 pytorch-lightning
 opencv-python
-# git+https://github.com/albumentations-team/albumentations
+segmentation_models_pytorch
+albumentations
 tqdm
 python-dotenv
 wandb
