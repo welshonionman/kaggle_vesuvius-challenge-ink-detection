@@ -44,7 +44,7 @@ def split_label_mask_inference(input_dir, dataset_dir, fragment_i):
 
 def split_stack_image(input_dir, dataset_dir, split=1):
     fragment_i = input_dir.split("/")[-1]
-    image_height = cv2.imread(f"{input_dir}/surface_volume/1.tif", -1).shape[0]
+    image_height = cv2.imread(f"{input_dir}/surface_volume/01.tif", -1).shape[0]
     split_height = image_height // split
 
     for split_i in range(split):
@@ -77,71 +77,46 @@ def split_stack_image(input_dir, dataset_dir, split=1):
 
 
 def flatten(image_stack, x, y, range, z_buffer):
-    clipped_stack = image_stack[:, x: x + range, y: y + range]  # smaller portion
+    clipped_stack = image_stack[:, x: x + range, y: y + range]
     clipped_stack = clipped_stack / 65535
     clipped_stack = np.flip(clipped_stack, axis=0)
-    gauss_stack = gaussian_filter(clipped_stack, sigma=1)  # blur data a little bit
-    gauss_stack = ndimage.sobel(
-        gauss_stack, axis=0
-    )  # detect edges in top-down direction
-    gauss_stack = gaussian_filter(gauss_stack, sigma=1)  # blur again
+    gauss_stack = gaussian_filter(clipped_stack, sigma=1)
+    gauss_stack = ndimage.sobel(gauss_stack, axis=0)
+    gauss_stack = gaussian_filter(gauss_stack, sigma=1)
 
-    filtered_stack = np.where(gauss_stack >= 0.5, 1, 0)  # type: ignore
+    filtered_stack = np.where(gauss_stack >= 0.5, 1, 0) # type: ignore
     topographic_map = np.argmax(filtered_stack, axis=0)
 
-    topographic_map = 64 - np.where(topographic_map == 0, 64, topographic_map).astype(
-        "uint8"
-    )
+    topographic_map = 64 - np.where(topographic_map == 0, 64, topographic_map).astype("uint8")
     if MEDIAN_FILTER_TOPOGRAPHIC_MAP:
         topographic_map = cv2.medianBlur(topographic_map, 15)
 
     is_idx = np.indices(clipped_stack.shape)
-    flattened_stack = clipped_stack[
-        (is_idx[0] + topographic_map - z_buffer) % clipped_stack.shape[0],
-        is_idx[1],
-        is_idx[2],
-    ]
-    flattened_stack = (np.flip(flattened_stack, axis=0) * 65536).astype("uint16")
+    flattened_stack = clipped_stack[is_idx[0] + topographic_map - z_buffer) % clipped_stack.shape[0], is_idx[1], is_idx[2],]
+    flattened_stack=(np.flip(flattened_stack, axis=0) * 65536).astype("uint16")
 
-    # topographic_map = 64-np.where(topographic_map==0, 64, topographic_map)
     return clipped_stack, gauss_stack, filtered_stack, topographic_map, flattened_stack
 
 
-def whole_flatten(dataset_dir, flatten_stack_dir, fragment_i, split_i, delete=False):
-    output_topography_path = os.path.join(
-        dataset_dir + f"topography_{fragment_i}_{split_i}.png"
-    )
-    output_flatten_stack_path = os.path.join(
-        flatten_stack_dir + f"flatten_stack_{fragment_i}_{split_i}.npy"
-    )
-    image_stack_path = dataset_dir + f"image_stack_{fragment_i}_{split_i}.npy"
+def whole_flatten(dataset_dir, flatten_stack_dir, fragment_i, split_i, delete = False):
+    output_topography_path=os.path.join(dataset_dir + f"topography_{fragment_i}_{split_i}.png")
+    output_flatten_stack_path=os.path.join(flatten_stack_dir + f"flatten_stack_{fragment_i}_{split_i}.npy")
+    image_stack_path=dataset_dir + f"image_stack_{fragment_i}_{split_i}.npy"
 
-    # if os.path.exists(output_flatten_stack_path):
-    #     return
+    if os.path.exists(output_flatten_stack_path):
+        return
 
-    image_stack = np.load(open(image_stack_path, "rb"))
+    image_stack=np.load(open(image_stack_path, "rb"))
 
-    _, image_stack_x, image_stack_y = image_stack.shape
-    output_topography = np.zeros(image_stack.shape[1:])
-    output_flatten_stack = np.zeros_like(image_stack)
+    _, image_stack_x, image_stack_y=image_stack.shape
+    output_topography=np.zeros(image_stack.shape[1:])
+    output_flatten_stack=np.zeros_like(image_stack)
     for x in range(0, image_stack_x, 250):
         for y in range(0, image_stack_y, 250):
-            (
-                clipped_stack,
-                gauss_stack,
-                filtered_stack,
-                topographic_map,
-                flattened_stack,
-            ) = flatten(image_stack, x, y, 250, 5)
+            clipped_stack,gauss_stack,filtered_stack,topographic_map,flattened_stack = flatten(image_stack, x, y, 250, 5)
             output_topography[x: x + 250, y: y + 250] = topographic_map
             output_flatten_stack[:, x: x + 250, y: y + 250] = flattened_stack
-            del (
-                clipped_stack,
-                gauss_stack,
-                filtered_stack,
-                topographic_map,
-                flattened_stack,
-            )
+            del clipped_stack,gauss_stack,filtered_stack,topographic_map,flattened_stack
 
     cv2.imwrite(output_topography_path, output_topography)
 
@@ -155,9 +130,7 @@ def whole_flatten(dataset_dir, flatten_stack_dir, fragment_i, split_i, delete=Fa
         os.remove(os.path.join(image_stack_path))
 
 
-def extract_flatten_layers(
-    input_dir, save_dir, fragment_i, split_i, start, stop, delete=False
-):
+def extract_flatten_layers(input_dir, save_dir, fragment_i, split_i, start, stop, delete=False):
     input_stack_path = f"{input_dir}/flatten_stack_{fragment_i}_{split_i}.npy"
     output_stack_path = f"{save_dir}/{fragment_i}_{split_i}.npy"
 
@@ -173,9 +146,7 @@ def extract_flatten_layers(
         os.remove(os.path.join(input_stack_path))
 
 
-def extract_nonflatten_layers(
-    input_dir, save_dir, fragment_i, split_i, start, stop, delete=False
-):
+def extract_nonflatten_layers(input_dir, save_dir, fragment_i, split_i, start, stop, delete=False):
     input_stack_path = f"{input_dir}/image_stack_{fragment_i}_{split_i}.npy"
     output_stack_path = f"{save_dir}/{fragment_i}_{split_i}.npy"
 
@@ -204,9 +175,7 @@ def concat_npy(save_dir, start, stop, fragment_i, delete=False):
         np.save(f, result, allow_pickle=True)
 
 
-def dataset_preprocess_nonflatten(
-    input_dir, dataset_dir, subdir, split, start, stop, train=True, delete=True
-):
+def dataset_preprocess_nonflatten(input_dir, dataset_dir, subdir, split, start, stop, train=True, delete=True):
     image_stack_dir = f"{dataset_dir}/{subdir}/"
     extract_save_dir = f"{image_stack_dir}/{start}-{stop}/"
     os.makedirs(dataset_dir, exist_ok=True)
@@ -219,9 +188,7 @@ def dataset_preprocess_nonflatten(
     split_stack_image(input_dir, dataset_dir, split)
 
     for split_i in range(split):
-        extract_nonflatten_layers(
-            dataset_dir, extract_save_dir, fragment_i, split_i, start, stop, delete
-        )
+        extract_nonflatten_layers(dataset_dir, extract_save_dir, fragment_i, split_i, start, stop, delete)
 
     if train:
         split_label_mask_train(input_dir, dataset_dir, split)
@@ -230,9 +197,7 @@ def dataset_preprocess_nonflatten(
         concat_npy(extract_save_dir, start, stop, fragment_i, delete)
 
 
-def dataset_preprocess_flatten(
-    input_dir, dataset_dir, subdir, split, start, stop, train=True, delete=True
-):
+def dataset_preprocess_flatten(input_dir, dataset_dir, subdir, split, start, stop, train=True, delete=True):
     flatten_stack_dir = f"{dataset_dir}/{subdir}/"
     extract_save_dir = f"{flatten_stack_dir}/{start}-{stop}/"
     os.makedirs(dataset_dir, exist_ok=True)
@@ -242,11 +207,11 @@ def dataset_preprocess_flatten(
     fragment_i = input_dir.split("/")[-1]
     print(input_dir)
 
-    # split_stack_image(input_dir, dataset_dir, split)
+    split_stack_image(input_dir, dataset_dir, split)
 
-    # for split_i in range(split):
-    #     whole_flatten(dataset_dir, flatten_stack_dir, fragment_i, split_i, delete=False)
-    #     extract_flatten_layers(flatten_stack_dir, extract_save_dir, fragment_i, split_i, start, stop, delete)
+    for split_i in range(split):
+        whole_flatten(dataset_dir, flatten_stack_dir, fragment_i, split_i, delete=False)
+        extract_flatten_layers(flatten_stack_dir, extract_save_dir, fragment_i, split_i, start, stop, delete)
 
     if train:
         split_label_mask_train(input_dir, dataset_dir, split)
