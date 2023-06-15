@@ -1,0 +1,33 @@
+No.,dice,fold0,fold1,fold2,fold3,fold4,arch,backbone,flatten,extract_layers,loss,channel,other
+01,0.5711,0.5562,0.5501,0.5619,0.6094,0.5808,Unet,se_resnext50_32x4d ,False,False,bce    ,29-34,
+02,0.5440,0.5089,0.5594,0.5185,0.5974,0.5378,Unet,efficientnet-b0    ,False,False,bce    ,29-34,
+03,0.4779,0.4667,0.4324,0.4825,0.5088,0.5050,Unet,efficientnet-b0    ,True ,False,bce    ,3-8,
+04,0.4982,0.4955,0.4790,0.4664,0.5501,0.5004,Unet,se_resnext50_32x4d ,True ,False,bce    ,3-8,
+05,0.5501,0.5337,0.5525,0.5341,0.5826,0.5489,Unet,efficientnet-b0    ,False,False,bce    ,29-34,topography
+06,0.5450,0.5005,0.5354,0.5262,0.6000,0.5713,Unet,efficientnet-b0    ,False,False,bce    ,29-34,clip
+07,0.4728,0.4298,0.4526,0.4773,0.5104,0.5029,Unet,efficientnet-b0    ,True ,False,bce    ,1-9,
+10,0.5498,0.4948,0.5650,0.5309,0.6058,0.5589,Unet,efficientnet-b3    ,False,False,bce    ,26-31,
+11,0.5050,0.4803,0.4943,0.5098,0.5523,0.4873,Unet,efficientnet-b3    ,False,False,bce    ,32-37,
+12,0.5440,0.5089,0.5594,0.5185,0.5974,0.5378,Unet,efficientnet-b7    ,False,False,bce    ,29-34,
+13,0.5594,0.5219,0.5736,0.5497,0.6082,0.5442,Unet,se_resnext101_32x4d,False,False,bce    ,29-34,
+14,0.4393,0.4078,0.4742,0.4670,0.4841,0.3503,Unet,se_resnext50_32x4d ,False,False,bce    ,35-40,
+15,0.5079,0.4524,0.4952,0.5051,0.5649,0.5305,Unet,se_resnext50_32x4d ,False,False,dicebce,23-28,
+16,0.5908,0.5607,0.6006,0.5938,0.6524,0.5402,Unet,se_resnext50_32x4d ,False,True ,dicebce,25-37,*base*
+17,0.5805,0.5146,0.6002,0.5959,0.6375,0.5555,Unet,se_resnext50_32x4d ,False,True ,dicebce,25-37,-blur
+18,0.5847,0.5596,0.5863,0.5815,0.6369,0.5562,Unet,se_resnext50_32x4d ,False,True ,dicebce,27-35,
+19,0.5828,0.5413,0.6165,0.5817,0.6310,0.5397,Unet,se_resnext50_32x4d ,False,True ,dicebce,25-37,strong_aug
+20,0.5510,0.4993,0.5468,0.5553,0.5966,0.5636,Unet,se_resnext50_32x4d ,False,True ,dicebce,25-37,layer_sample
+21,0.5838,0.5498,0.5781,0.5984,0.6503,0.5371,Unet,se_resnext50_32x4d ,False,True ,dicebce,23-39,
+22,0.5868,0.5209,0.6082,0.5878,0.6535,0.5654,Unet,se_resnext50_32x4d ,False,True ,dicebce,25-37,clip
+23,0.6047,0.5756,0.5838,0.6237,0.6414,0.6005,U++ ,se_resnext50_32x4d ,False,True ,dicebce,25-37,
+24,0.5654,0.5460,0.5433,0.5668,0.6199,0.5497,PSPN,se_resnext50_32x4d ,False,True ,dicebce,25-37,
+26,0.5879,0.5378,0.5916,0.6031,0.6568,0.5473,Unet,se_resnext50_32x4d ,False,True ,dicebce,25-37,CLAHE
+27,0.5639,0.4986,0.6019,0.5829,0.6262,0.5051,Unet,se_resnext50_32x4d ,False,True ,dicebce,25-37,CLAHE
+28,0.5836,0.5470,0.5946,0.5852,0.6163,0.5774,Unet,se_resnext50_32x4d ,False,True ,dicebce,25-37,imgsize512
+29,0.5504,0.4777,0.5713,0.5885,0.6250,0.4838,Unet,se_resnext50_32x4d ,False,True ,dice   ,25-37,
+30,0.5992,0.5601,0.6125,0.5951,0.6358,0.5949,Unet,se_resnext50_32x4d ,False,True ,bce    ,25-37,
+31,0.5888,0.5423,0.6071,0.6042,0.6252,0.5650,Unet,se_resnext50_32x4d ,False,True ,dicebce,25-37,in_chan=8
+32,0.5749,0.5350,0.5979,0.5829,0.6219,0.5327,Unet,se_resnext50_32x4d ,False,True ,dicebce,25-37,in_chan=10
+33,0.5970,0.5518,0.6039,0.6048,0.6360,0.5914,U++ ,se_resnext50_32x4d ,False,True ,bce    ,25-37,
+34,0.6068,0.5660,0.6246,0.6067,0.6462,0.5915,U++ ,tf_efficientnetv2_l,False,True ,dicebce,25-37,
+35,0.5915,0.5364,0.6062,0.5984,0.6346,0.5854,U++ ,se_resnext101_32x4d,False,True ,dicebce,25-37,
