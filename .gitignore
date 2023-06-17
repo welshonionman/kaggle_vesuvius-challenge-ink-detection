@@ -1,0 +1,17 @@
+input/**
+
+*.png
+*.npy
+*.pth
+*.txt
+
+!header.png
+working/notebook/_old/*
+__pycache__
+kaggle.json
+kaggle-api.ipynb
+kernel-metadata.json
+dataset-metadata.json
+vscode_extentions.sh
+.vscode/**
+.gitkeep
