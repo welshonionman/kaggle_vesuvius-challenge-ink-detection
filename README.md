@@ -64,7 +64,7 @@ High/Low pass filter
 
 Layer augmentation
 
-label、maskの一部をtopographic_map（https://www.kaggle.com/code/henrikbrk/fragment-flattening）をもとに削除
+label、maskの一部をtopographic_map（https://www.kaggle.com/code/henrikbrk/fragment-flattening ）をもとに削除
 
 Model: Proposed in https://www.kaggle.com/code/hengck23/lb0-68-one-fold-stacked-unet
 
